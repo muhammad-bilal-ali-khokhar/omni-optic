@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniOptic Extreme Eye Trainer</title>
+    <style>
+        :root {
+            --bg-color: #0a0f1d;
+            --panel-bg: #131a30;
+            --accent-color: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --danger-color: #ff3366;
+            --text-color: #ffffff;
+            --text-muted: #8fa0c4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ffffff;
+        }
+
+        .logo span {
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
+        }
+
+        .btn:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-stop {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.1);
+        }
+
+        .btn-stop:hover {
+            background: var(--danger-color);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        select {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 30px;
+            font-size: 14px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 5px 15px;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        main {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #11182c 0%, #060a14 100%);
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 29, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .overlay-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .welcome-card {
+            background: var(--panel-bg);
+            padding: 30px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .welcome-card h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .welcome-card h1 span {
+            color: var(--accent-color);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .info-box h3 {
+            color: var(--accent-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-box p, .info-box ul {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .info-box ul {
+            list-style-position: inside;
+            padding-left: 5px;
+        }
+
+        .instructions {
+            margin: 15px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+            background: rgba(255, 51, 102, 0.05);
+            border-left: 3px solid var(--danger-color);
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .exercise-indicator {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(19, 26, 48, 0.85);
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            backdrop-filter: blur(10px);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ffffff;
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 4;
+        }
+
+        .exercise-indicator.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        .center-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            opacity: 0.15;
+            display: none;
+            z-index: 4;
+        }
+
+        .center-crosshair::before, .center-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #ffffff;
+        }
+        .center-crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+        .center-crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 4px 20px rgba(0, 255, 204, 0.2); border-color: var(--accent-color); }
+            100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+        }
+
+        .action-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .fullscreen-prompt {
+            margin-top: 10px;
+            font-size: 11px;
+            color: var(--accent-color);
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">OMNI<span>OPTIC</span></div>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <div class="stat-label">Routine Stage</div>
+                <div class="stat-value" id="stage-ui">Idle</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Time Remaining</div>
+                <div class="stat-value" id="timer-ui">00:00</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <select id="routine-select">
+                <option value="full">Full Extreme Routine (6.5 Mins)</option>
+                <option value="saccade">1. Saccade Hyper-Jump (60s)</option>
+                <option value="brock">2. Digital Brock String (2m)</option>
+                <option value="laser">3. Laser Wall Tracing (90s)</option>
+                <option value="chaos">4. Chaos Tracking Burnout (60s)</option>
+            </select>
+            <button class="btn" id="start-btn">Start Workout</button>
+            <button class="btn btn-stop hidden" id="stop-btn">Abort</button>
+        </div>
+    </header>
+
+    <main id="main-container">
+        <canvas id="canvas"></canvas>
+        <div class="center-crosshair" id="crosshair"></div>
+        <div class="exercise-indicator" id="indicator">Phase 1: Saccade Blitz</div>
+
+        <div class="overlay-screen" id="welcome-screen">
+            <div class="welcome-card">
+                <h1>OMNI<span>OPTIC</span></h1>
+                <p style="color: var(--accent-color); font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 13px;">HIGH-STAMINA VISUAL ODOMETRY TRAINING PROTOCOL</p>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>⚡ Key Benefits</h3>
+                        <ul>
+                            <li>Strengthens extraocular muscles (ciliary/rectus).</li>
+                            <li>Improves rapid shifting speed (saccades).</li>
+                            <li>Enhances dynamic depth perception & focus tracking.</li>
+                            <li>Relieves screen-fatigue and digital eye strain.</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>📅 Schedule & Usage</h3>
+                        <p><strong>When to use:</strong> Morning priming, pre-gaming/high-focus work sessions, or during screen breaks.</p>
+                        <p style="margin-top: 8px;"><strong>Daily Time:</strong> 1 full routine (~6.5 mins) per day is optimal. Do not exceed 2 sessions daily to prevent muscle exhaustion.</p>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <p><strong>⚠️ PROTOCOL & SAFETY:</strong> Keep your head completely locked and still. Follow elements strictly with your <strong>eyes only</strong>. Sit at arm's length. Discontinue if dizzy.</p>
+                </div>
+
+                <div class="action-container">
+                    <button class="btn" id="overlay-start-btn" style="padding: 12px 35px; font-size: 16px;">Initiate Fullscreen Session</button>
+                    <p class="fullscreen-prompt">Clicking will lock workspace into an immersive full-screen frame.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const mainContainer = document.getElementById('main-container');
+        
+        // DOM Elements
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const overlayStartBtn = document.getElementById('overlay-start-btn');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const routineSelect = document.getElementById('routine-select');
+        const stageUi = document.getElementById('stage-ui');
+        const timerUi = document.getElementById('timer-ui');
+        const indicator = document.getElementById('indicator');
+        const crosshair = document.getElementById('crosshair');
+
+        // State Machine Vars
+        let isActive = false;
+        let currentMode = 'idle';
+        let animationFrameId = null;
+        let countdownInterval = null;
+        let timeRemaining = 0;
+        let routineQueue = [];
+        let currentQueueIndex = 0;
+
+        // Exercise Configurations
+        const EXERCISES = {
+            saccade: { name: "Saccade Hyper-Jump", duration: 60, init: initSaccade, update: updateSaccade },
+            brock: { name: "Digital Brock String", duration: 120, init: initBrock, update: updateBrock },
+            laser: { name: "Laser Wall Tracing", duration: 90, init: initLaser, update: updateLaser },
+            chaos: { name: "Chaos Tracking Burnout", duration: 60, init: initChaos, update: updateChaos }
+        };
+
+        // Resize Handling
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - document.querySelector('header').offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Engine State Variables
+        let targetX = 0, targetY = 0, targetRadius = 25;
+        let lastSwitchTime = 0;
+        let saccadeInterval = 300;
+        let brockProgress = 0;
+        let brockDirection = 1;
+        let laserAngle = 0;
+        let chaosX = 0, chaosY = 0, chaosVx = 8, chaosVy = 6;
+
+        // Interaction Event Triggers
+        overlayStartBtn.addEventListener('click', () => {
+            requestFullscreen();
+            welcomeScreen.classList.add('hidden');
+            startWorkout();
+        });
+        startBtn.addEventListener('click', startWorkout);
+        stopBtn.addEventListener('click', abortWorkout);
+
+        function requestFullscreen() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+
+        // Logic Controls
+        function startWorkout() {
+            abortWorkout();
+            isActive = true;
+            welcomeScreen.classList.add('hidden');
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            crosshair.style.display = 'block';
+            const selection = routineSelect.value;
+            if (selection === 'full') {
+                routineQueue = ['saccade', 'brock', 'laser', 'chaos'];
+            } else {
+                routineQueue = [selection];
+            }
+            currentQueueIndex = 0;
+            loadQueuePhase();
+            tickLoop();
+        }
+
+        function abortWorkout() {
+            isActive = false;
+            currentMode = 'idle';
+            cancelAnimationFrame(animationFrameId);
+            clearInterval(countdownInterval);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stageUi.textContent = "Idle";
+            timerUi.textContent = "00:00";
+            indicator.classList.remove('active');
+            crosshair.style.display = 'none';
+            stopBtn.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+        }
+
+        function loadQueuePhase() {
+            if (currentQueueIndex >= routineQueue.length) {
+                completeWorkout();
+                return;
+            }
+            currentMode = routineQueue[currentQueueIndex];
+            timeRemaining = EXERCISES[currentMode].duration;
+            stageUi.textContent = `${currentQueueIndex + 1} / ${routineQueue.length}`;
+            indicator.textContent = EXERCISES[currentMode].name;
+            indicator.classList.add('active');
+            EXERCISES[currentMode].init();
+            updateTimerUI();
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerUI();
+                if (timeRemaining <= 0) {
+                    currentQueueIndex++;
+                    loadQueuePhase();
+                }
+            }, 1000);
+        }
+
+        function completeWorkout() {
+            abortWorkout();
+            welcomeScreen.classList.remove('hidden');
+            document.querySelector('.welcome-card h1').innerHTML = "WORKOUT COMPLETE";
+            document.querySelector('.fullscreen-prompt').textContent = "Excellent endurance. Allow eye muscles 10-15 minutes of rest.";
+        }
+
+        function updateTimerUI() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerUi.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // --- Core Animation Loop ---
+        function tickLoop() {
+            if (!isActive) return;
+            ctx.fillStyle = 'rgba(10, 15, 29, 0.2)'; // Motion blur tracking trailing line effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (EXERCISES[currentMode]) {
+                EXERCISES[currentMode].update();
+            }
+            animationFrameId = requestAnimationFrame(tickLoop);
+        }
+
+        // --- Exercise Initializations & State Update Logic ---
+        // Phase 1: Saccade Blitz
+        function initSaccade() {
+            lastSwitchTime = 0;
+            targetRadius = 20;
+            saccadeInterval = 320;
+        }
+        function updateSaccade() {
+            let now = Date.now();
+            if (now - lastSwitchTime > saccadeInterval) {
+                const padding = 60;
+                const columns = [padding, canvas.width / 2, canvas.width - padding];
+                const rows = [padding, canvas.height / 2, canvas.height - padding];
+                targetX = columns[Math.floor(Math.random() * columns.length)];
+                targetY = rows[Math.floor(Math.random() * rows.length)];
+                if(targetX === canvas.width/2 && targetY === canvas.height/2 && Math.random() > 0.2) {
+                    targetX = Math.random() > 0.5 ? padding : canvas.width - padding;
+                }
+                lastSwitchTime = now;
+            }
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = varColor('--accent-color');
+            ctx.fillStyle = varColor('--accent-color');
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, targetRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, targetRadius + 10, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // Phase 2: Brock String depth simulations
+        function initBrock() {
+            brockProgress = 0.05;
+            brockDirection = 1;
+        }
+        function updateBrock() {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(canvas.width, canvas.height);
+            ctx.moveTo(canvas.width, 0); ctx.lineTo(0, canvas.height);
+            ctx.stroke();
+
+            brockProgress += 0.0075 * brockDirection;
+            if (brockProgress > 0.95 || brockProgress < 0.03) {
+                brockDirection *= -1;
+            }
+
+            let scalar = Math.pow(brockProgress, 2);
+            let distanceX = (canvas.width / 2.3) * (1 - scalar);
+            let distanceY = (canvas.height / 2.3) * (1 - scalar);
+
+            let positions = [
+                {x: cx - distanceX, y: cy - distanceY},
+                {x: cx + distanceX, y: cy - distanceY},
+                {x: cx - distanceX, y: cy + distanceY},
+                {x: cx + distanceX, y: cy + distanceY}
+            ];
+
+            positions.forEach((pos, idx) => {
+                let currentRadius = 8 + (75 * (1 - brockProgress));
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = varColor('--accent-color');
+                ctx.fillStyle = idx % 2 === 0 ? varColor('--accent-color') : '#ff0055';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, Math.max(4, currentRadius), 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        // Phase 3: Laser Tracing loops
+        function initLaser() {
+            laserAngle = 0;
+        }
+        function updateLaser() {
+            laserAngle += 0.025;
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            targetX = cx + (canvas.width * 0.42) * Math.sin(laserAngle);
+            targetY = cy + (canvas.height * 0.38) * Math.sin(2 * laserAngle) / 1.2;
+
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#ff3366';
+            ctx.fillStyle = '#ff3366';
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(targetX - 25, targetY); ctx.lineTo(targetX + 25, targetY);
+            ctx.moveTo(targetX, targetY - 25); ctx.lineTo(targetX, targetY + 25);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // Phase 4: Extreme Chaos Burnout at high speeds
+        function initChaos() {
+            chaosX = canvas.width / 2;
+            chaosY = canvas.height / 2;
+            let speedMod = canvas.width > 1200 ? 1.4 : 1.0;
+            chaosVx = (14 + Math.random() * 6) * speedMod;
+            chaosVy = (10 + Math.random() * 6) * speedMod;
+            targetRadius = 16;
+        }
+        function updateChaos() {
+            chaosX += chaosVx;
+            chaosY += chaosVy;
+
+            const padding = targetRadius + 10;
+            if (chaosX < padding || chaosX > canvas.width - padding) {
+                chaosVx *= -1;
+                chaosVx += (Math.random() - 0.5) * 2;
+                chaosX = chaosX < padding ? padding : canvas.width - padding;
+            }
+            if (chaosY < padding || chaosY > canvas.height - padding) {
+                chaosVy *= -1;
+                chaosVy += (Math.random() - 0.5) * 2;
+                chaosY = chaosY < padding ? padding : canvas.height - padding;
+            }
+
+            const maxSpeed = 30;
+            chaosVx = Math.max(-maxSpeed, Math.min(maxSpeed, chaosVx));
+            chaosVy = Math.max(-maxSpeed, Math.min(maxSpeed, chaosVy));
+
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = varColor('--accent-color');
+            ctx.fillStyle = varColor('--accent-color');
+            ctx.beginPath();
+            ctx.arc(chaosX, chaosY, targetRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // Helper utility to resolve CSS dynamic variables
+        function varColor(variableName) {
+            return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+        }
+    </script>
+</body>
+</html>
